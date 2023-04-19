@@ -1,5 +1,7 @@
 package models.entities;
 
+import models.exceptions.DomainExceptions;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +13,11 @@ public class Reservation {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-    public Reservation(Integer roomNumber, Date checkIn, Date checkOut) {
+    public Reservation(Integer roomNumber, Date checkIn, Date checkOut) throws DomainExceptions {
+
+        if (!checkOut.after(checkIn)) {
+            throw new DomainExceptions("Error in reservation: Reservation dates for must be after check-in dates");
+        }
         this.roomNumber = roomNumber;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
@@ -33,24 +39,20 @@ public class Reservation {
         return checkOut;
     }
 
-    public long duration(){
+    public long duration() {
         long diff = checkOut.getTime() - checkIn.getTime();
         return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
     }
 
-    public String updateDays(Date checkIn, Date checkOut){
-
+    public void updateDays(Date checkIn, Date checkOut) throws DomainExceptions {
         Date now = new Date();
 
-        if(checkIn.before(now) || checkOut.before(now)){
-            return  "Error in reservation: Reservation dates for must be future dates";
-        }if(checkOut.after(checkIn)){
-            return "Error in reservation: Reservation dates for must be after check-in dates";
+        if (checkIn.before(now) || checkOut.before(now)) {
+            throw new DomainExceptions("Error in reservation: Reservation dates for must be future dates");
         }
+
         this.checkIn = checkIn;
         this.checkOut = checkOut;
-
-        return null;
     }
 
     @Override
@@ -61,7 +63,8 @@ public class Reservation {
                 + sdf.format(checkIn)
                 + ", check-out: "
                 + sdf.format(checkOut)
-                +", "
+                + ", "
                 + duration()
-                + " Nights";}
+                + " Nights";
+    }
 }
